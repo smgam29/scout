@@ -53,8 +53,11 @@ export function getWorkspaceSnapshot(): SavedWorkspace | null {
   return snapshot;
 }
 
-export function getServerWorkspaceSnapshot(): SavedWorkspace | null {
-  return null;
+let serverSnapshot: SavedWorkspace | null = null;
+
+export function getServerWorkspaceSnapshot(): SavedWorkspace {
+  if (!serverSnapshot) serverSnapshot = freshWorkspace();
+  return serverSnapshot;
 }
 
 export function subscribeWorkspace(listener: () => void) {

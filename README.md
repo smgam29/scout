@@ -16,10 +16,10 @@ npm run dev
 
 Open [http://127.0.0.1:3847](http://127.0.0.1:3847).
 
-The dev server in this project is meant to listen on `0.0.0.0:3847`:
+The dev server listens on every IPv4 and IPv6 address, port 3847, so a forwarded localhost works either way:
 
 ```bash
-npm run dev -- --hostname 0.0.0.0 --port 3847
+npm run dev -- --hostname :: --port 3847
 ```
 
 ## Keys
