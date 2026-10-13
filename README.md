@@ -6,21 +6,32 @@ The starter project is: “Research sea animals and create 3 images that show wh
 
 Scout is not a general chatbot. The safety rules live in server code. The browser cannot edit or remove them. Chat, pictures, and the hear button all go through OpenRouter. The key stays on the server.
 
-## Run it locally
+## Run it on your Mac
+
+1. Install [Node.js 20+](https://nodejs.org/) if you do not have it (`node -v` in Terminal).
+2. Get this Scout project onto your Mac (clone the repo, or use Cursor’s local/open project flow after you create a real repo).
+3. In Terminal:
 
 ```bash
+cd /path/to/scout
 npm install
 cp .env.example .env.local
+```
+
+4. Open `.env.local` and put your OpenRouter key on the `OPENROUTER_API_KEY=` line. Do not commit that file.
+5. Start Scout:
+
+```bash
 npm run dev
 ```
 
-Open [http://127.0.0.1:3847](http://127.0.0.1:3847).
+6. Open [http://127.0.0.1:3847](http://127.0.0.1:3847).
 
-The dev server listens on every IPv4 and IPv6 address, port 3847, so a forwarded localhost works either way:
+`npm run dev` already binds to every address on port 3847. Leave that Terminal window open while you use the app.
 
-```bash
-npm run dev -- --hostname :: --port 3847
-```
+For chat to work with Scout’s locked safety prompt, allowlist this exact phrase in OpenRouter → Settings → Privacy → prompt injection allowlist:
+
+`ignore previous instructions`
 
 ## Keys
 

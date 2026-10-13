@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname :: --port 3847",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --hostname :: --port 3847",
     "lint": "eslint",
     "test:guardrails": "node --conditions=react-server --import tsx --test src/lib/guardrails/checks.test.ts"
   },
