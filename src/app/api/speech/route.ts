@@ -1,9 +1,7 @@
 import { checkText } from "@/lib/guardrails/checks";
 import { badRequest, MISSING_SPEECH_MESSAGE, PROVIDER_MESSAGE, rateLimited } from "@/lib/api-input";
-import { speak } from "@/lib/elevenlabs";
 import { allowRequest } from "@/lib/rate-limit";
-import { MissingKeyError, ProviderError } from "@/lib/openrouter";
-import { elevenLabsKey } from "@/lib/elevenlabs";
+import { MissingKeyError, openRouterKey, ProviderError, speak } from "@/lib/openrouter";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -34,7 +32,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "blocked", message: verdict.redirect });
   }
 
-  if (!elevenLabsKey()) {
+  if (!openRouterKey()) {
     return Response.json(
       { ok: false, error: "missing_key", message: MISSING_SPEECH_MESSAGE },
       { status: 503 },
@@ -43,10 +41,10 @@ export async function POST(request: Request) {
 
   try {
     const audio = await speak(spoken);
-    return new Response(audio, {
+    return new Response(audio.bytes, {
       status: 200,
       headers: {
-        "Content-Type": "audio/mpeg",
+        "Content-Type": audio.contentType,
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
       },

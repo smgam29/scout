@@ -70,7 +70,7 @@ export const MISSING_IMAGE_MESSAGE =
   "Pictures need a setup key from a parent (OpenRouter). This box stays empty until then.";
 
 export const MISSING_SPEECH_MESSAGE =
-  "Voice needs a setup key from a parent (ElevenLabs).";
+  "Voice needs the same setup key as answers (OpenRouter).";
 
 export const PROVIDER_MESSAGE =
   "Scout couldn\u2019t finish that just now. Try again in a moment.";

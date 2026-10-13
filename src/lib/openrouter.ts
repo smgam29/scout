@@ -28,6 +28,12 @@ export function imageModel(): string {
   return raw.replace(/:online$/i, "");
 }
 
+export function speechModel(): string {
+  const raw =
+    process.env.OPENROUTER_SPEECH_MODEL?.trim() || "openai/gpt-4o-mini-tts-2025-12-15";
+  return raw.replace(/:online$/i, "");
+}
+
 function headers(key: string): HeadersInit {
   return {
     Authorization: `Bearer ${key}`,
@@ -122,4 +128,30 @@ export async function generateImage(prompt: string): Promise<string> {
     return `data:${mime};base64,${bytes.toString("base64")}`;
   }
   throw new ProviderError();
+}
+
+export async function speak(text: string): Promise<{ bytes: ArrayBuffer; contentType: string }> {
+  const key = openRouterKey();
+  if (!key) throw new MissingKeyError();
+  const voice = process.env.OPENROUTER_SPEECH_VOICE?.trim() || "alloy";
+  const response = await fetch("https://openrouter.ai/api/v1/audio/speech", {
+    method: "POST",
+    headers: headers(key),
+    cache: "no-store",
+    signal: AbortSignal.timeout(30_000),
+    body: JSON.stringify({
+      model: speechModel(),
+      input: text,
+      voice,
+      response_format: "mp3",
+    }),
+  });
+  if (!response.ok) throw new ProviderError();
+  const bytes = await response.arrayBuffer();
+  if (bytes.byteLength === 0) throw new ProviderError();
+  const contentType = response.headers.get("content-type") || "";
+  return {
+    bytes,
+    contentType: contentType.startsWith("audio/") ? contentType : "audio/mpeg",
+  };
 }

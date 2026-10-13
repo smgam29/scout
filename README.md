@@ -4,7 +4,7 @@ Scout is a research helper for a 9-year-old. He gets one school-style project, t
 
 The starter project is: “Research sea animals and create 3 images that show what you learned.”
 
-Scout is not a general chatbot. The safety rules live in server code. The browser cannot edit or remove them. Chat and pictures go through OpenRouter. The hear button uses the ElevenLabs API directly. Keys stay on the server.
+Scout is not a general chatbot. The safety rules live in server code. The browser cannot edit or remove them. Chat, pictures, and the hear button all go through OpenRouter. The key stays on the server.
 
 ## Run it locally
 
@@ -28,8 +28,7 @@ Put these in `.env.local`. Do not commit that file. Do not prefix them with `NEX
 
 | Name | Needed for |
 | --- | --- |
-| `OPENROUTER_API_KEY` | Chat, new project ideas, and pictures |
-| `ELEVENLABS_API_KEY` | The Hear this button |
+| `OPENROUTER_API_KEY` | Chat, new project ideas, pictures, and Hear this |
 
 Optional model overrides are listed in `.env.example`.
 

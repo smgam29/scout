@@ -117,7 +117,7 @@ export function ChatPanel({
         <h2 className="text-lg font-semibold tracking-[-0.02em]">Ask Scout</h2>
         <p className="text-right text-sm text-muted-foreground" data-testid="voice-status">
           {speechReady === false
-            ? "Voice needs a setup key from a parent."
+            ? "Voice uses the same setup key as answers."
             : speechReady
               ? "Press Hear this on a reply. It will not play by itself."
               : "Checking voice…"}
