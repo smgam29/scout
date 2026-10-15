@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Compass } from "lucide-react";
 
 import { ChatPanel } from "@/components/chat-panel";
+import { ParentSettingsButton } from "@/components/parent-settings-dialog";
 import { ProjectPanel } from "@/components/project-panel";
 import { ResultsTray } from "@/components/results-tray";
 import { Button } from "@/components/ui/button";
@@ -443,6 +444,7 @@ export function Workspace() {
         <p className="text-sm text-muted-foreground">
           Ask Scout, make 2 pictures, write what you learned.
         </p>
+        <ParentSettingsButton />
       </header>
       {storageWarning ? (
         <p className="px-4 pb-2 text-sm text-muted-foreground lg:px-6">{storageWarning}</p>

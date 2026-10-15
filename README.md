@@ -6,44 +6,72 @@ The starter project is: “Research sea animals and create 2 pictures that show 
 
 Scout is not a general chatbot. The safety rules live in server code. The browser cannot edit or remove them. Chat and pictures go through OpenRouter. The key stays on the server.
 
-## Run it on your Mac
+## Parent setup (once) on the family Mac
 
-1. Install [Node.js 20+](https://nodejs.org/) if you do not have it (`node -v` in Terminal).
-2. Get this Scout project onto your Mac (clone the repo, or use Cursor’s local/open project flow after you create a real repo).
+1. Install [Node.js 20 LTS](https://nodejs.org/) (`node -v` in Terminal).
+2. Put this Scout folder on the Mac (clone, download, or Cursor project).
 3. In Terminal:
 
 ```bash
 cd /path/to/scout
 npm install
-cp .env.example .env.local
 ```
 
-4. Open `.env.local` and put your OpenRouter key on the `OPENROUTER_API_KEY=` line. Do not commit that file.
-5. Start Scout:
+4. Add the OpenRouter key in **one** of these ways (do not commit real keys):
+
+   - **Preferred for a child’s limited account:** start Scout, open **Parent settings** in the header, paste the key, Save. Scout stores it in a local gitignored file (`.scout/openrouter-key`), not in the browser.
+   - **Or** copy `.env.example` to `.env.local` and set `OPENROUTER_API_KEY=` there.
+
+5. For chat to work with Scout’s locked safety prompt, allowlist this exact phrase in OpenRouter → Settings → Privacy → prompt injection allowlist:
+
+   `ignore previous instructions`
+
+## Child launch (folder)
+
+Double-click **Start Scout.command** in the Scout folder. It starts the server and opens [http://127.0.0.1:3847](http://127.0.0.1:3847).
+
+Double-click **Stop Scout.command** when finished.
+
+Or from Terminal:
 
 ```bash
 npm run dev
 ```
 
-6. Open [http://127.0.0.1:3847](http://127.0.0.1:3847).
+Leave the server running while you use the app.
 
-`npm run dev` already binds to every address on port 3847. Leave that Terminal window open while you use the app.
+## Optional: Scout.app on the Desktop
 
-For chat to work with Scout’s locked safety prompt, allowlist this exact phrase in OpenRouter → Settings → Privacy → prompt injection allowlist:
+On the parent’s Mac (this must be built on macOS; cloud Linux cannot make the `.app`):
 
-`ignore previous instructions`
+```bash
+cd /path/to/scout
+chmod +x macos/build-scout-app.sh
+./macos/build-scout-app.sh
+```
+
+That builds an unsigned `~/Desktop/Scout.app` with a standalone Next server. It does **not** bake in the API key.
+
+1. Move `Scout.app` where the child can open it (Desktop or Applications).
+2. First open: right-click → **Open** (Gatekeeper).
+3. Parent opens **Parent settings** once and pastes the OpenRouter key.
+4. The key is stored under `~/Library/Application Support/Scout/`, not inside the `.app` and not in git.
+
+Private / family use only — not for the App Store or public distribution.
 
 ## Keys
 
-Put these in `.env.local`. Do not commit that file. Do not prefix them with `NEXT_PUBLIC_`.
+Never prefix keys with `NEXT_PUBLIC_`. Never put real keys in git or README examples.
 
-| Name | Needed for |
+| Source | Needed for |
 | --- | --- |
-| `OPENROUTER_API_KEY` | Chat, new project ideas, and pictures |
+| Parent settings (`.scout/openrouter-key`) or `OPENROUTER_API_KEY` in `.env.local` | Chat, new project ideas, and pictures |
+
+Resolution order: environment variable, then the Parent settings file.
 
 Optional model overrides are listed in `.env.example`.
 
-If a key is missing, that part of the page says so. The rest still works. Scout will not invent a fake answer and pretend it came from a model.
+If a key is missing, that part of the page says so and points parents to Parent settings. The rest still works. Scout will not invent a fake answer and pretend it came from a model.
 
 A new project idea needs the OpenRouter key. Without it, New project picks another starter from the built-in list and says so.
 

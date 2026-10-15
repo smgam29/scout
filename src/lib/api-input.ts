@@ -83,10 +83,10 @@ export const RATE_LIMIT_MESSAGE =
   "Scout needs a short rest. Wait a minute, then try again.";
 
 export const MISSING_CHAT_MESSAGE =
-  "Answers need a setup key from a parent. You can still read your project. Nothing here is a made-up answer.";
+  "Answers need a setup key from a parent. Ask a parent to open Parent settings (top of the page) and paste the OpenRouter key. You can still read your project. Nothing here is a made-up answer.";
 
 export const MISSING_IMAGE_MESSAGE =
-  "Pictures need a setup key from a parent (OpenRouter). This box stays empty until then.";
+  "Pictures need a setup key from a parent. Ask a parent to open Parent settings and paste the OpenRouter key. This box stays empty until then.";
 
 export const PROVIDER_MESSAGE =
   "Scout couldn\u2019t finish that just now. Try again in a moment.";

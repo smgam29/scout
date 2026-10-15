@@ -1,5 +1,7 @@
 import "server-only";
 
+import { readSavedOpenRouterKey } from "@/lib/secrets";
+
 export class MissingKeyError extends Error {
   constructor() {
     super("missing_key");
@@ -13,8 +15,9 @@ export class ProviderError extends Error {
 }
 
 export function openRouterKey(): string | null {
-  const key = process.env.OPENROUTER_API_KEY?.trim();
-  return key ? key : null;
+  const fromEnv = process.env.OPENROUTER_API_KEY?.trim();
+  if (fromEnv) return fromEnv;
+  return readSavedOpenRouterKey();
 }
 
 export function chatModel(): string {
