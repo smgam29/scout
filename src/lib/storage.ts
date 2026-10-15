@@ -1,5 +1,9 @@
 import { allBriefsDone, briefStatuses, defaultBriefsForProject } from "@/lib/brief";
-import { isLearnedReady, sanitizeLearnedHtml } from "@/lib/learned-html";
+import {
+  isLearnedReady,
+  LEARNED_HTML_MAX_CHARS,
+  sanitizeLearnedHtml,
+} from "@/lib/learned-html";
 import {
   STARTERS,
   starterProject,
@@ -344,7 +348,7 @@ function normalizeWork(value: unknown): ProjectWork | null {
       : null;
   let learnedHtml =
     typeof record.learnedHtml === "string"
-      ? sanitizeLearnedHtml(record.learnedHtml).slice(0, 40_000)
+      ? sanitizeLearnedHtml(record.learnedHtml).slice(0, LEARNED_HTML_MAX_CHARS)
       : "";
   if (!learnedHtml && notes.length > 0) {
     learnedHtml = notes

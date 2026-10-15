@@ -179,7 +179,7 @@ export function ResultsTray({
         <p className="mt-2 max-w-[62ch] text-sm text-muted-foreground">
           {locked
             ? "This page is locked because the project was submitted."
-            : "Write your project here. Type your own words, or press Save this on a Scout reply to paste it in. You can edit, bold, italic, and change colors."}
+            : "Write your project here. Type your own words, paste a picture, or press Save this on a Scout reply. You can edit, bold, italic, change colors, and drag a picture’s corner to resize it."}
         </p>
         <div className="mt-3">
           <LearnedEditor html={learnedHtml} locked={locked} onChange={onLearnedChange} />

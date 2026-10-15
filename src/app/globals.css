@@ -166,6 +166,42 @@
   margin-bottom: 0;
 }
 
+.learned-editor-field img {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  margin: 0.5rem 0;
+  border-radius: 0.5rem;
+  vertical-align: middle;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.learned-img-outline {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  border: 2px solid var(--ring);
+  border-radius: 0.5rem;
+  pointer-events: none;
+}
+
+.learned-img-handle {
+  position: absolute;
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--card);
+  border-radius: 3px;
+  background: var(--ring);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--foreground) 20%, transparent);
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
 @keyframes notes-pulse {
   0% {
     box-shadow: 0 0 0 0 color-mix(in oklch, var(--ring) 55%, transparent);
