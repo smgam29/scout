@@ -1,21 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Square, Volume2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
+import { KidMarkdown } from "@/components/kid-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { Project } from "@/lib/projects";
 import type { ChatMessage, Notice } from "@/lib/storage";
-
-type SpeechState = "idle" | "loading" | "playing";
 
 export function ChatPanel({
   project,
   messages,
   notices,
   sending,
-  speechReady,
+  locked,
+  chatAtLimit,
+  chatSoftWarn,
   onSend,
   onSave,
   savedMessageIds,
@@ -24,18 +25,17 @@ export function ChatPanel({
   messages: ChatMessage[];
   notices: Notice[];
   sending: boolean;
-  speechReady: boolean | null;
+  locked: boolean;
+  chatAtLimit: boolean;
+  chatSoftWarn: boolean;
   onSend: (text: string) => void;
   onSave: (message: ChatMessage) => void;
   savedMessageIds: string[];
 }) {
   const [draft, setDraft] = useState("");
-  const [speechState, setSpeechState] = useState<SpeechState>("idle");
-  const [speechId, setSpeechId] = useState<string | null>(null);
-  const [speechNote, setSpeechNote] = useState<{ id: string; text: string } | null>(null);
+  const [saveCueId, setSaveCueId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const urlRef = useRef<string | null>(null);
+  const saveCueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -43,237 +43,198 @@ export function ChatPanel({
 
   useEffect(() => {
     return () => {
-      audioRef.current?.pause();
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      if (saveCueTimerRef.current) clearTimeout(saveCueTimerRef.current);
     };
   }, []);
 
-  function stopSpeech() {
-    audioRef.current?.pause();
-    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    urlRef.current = null;
-    setSpeechState("idle");
-    setSpeechId(null);
-  }
-
-  async function hear(message: ChatMessage) {
-    if (speechState === "loading") return;
-    if (speechState === "playing" && speechId === message.id) {
-      stopSpeech();
-      return;
-    }
-    stopSpeech();
-    setSpeechId(message.id);
-    setSpeechState("loading");
-    setSpeechNote(null);
-    try {
-      const response = await fetch("/api/speech", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: message.content }),
-      });
-      const type = response.headers.get("content-type") ?? "";
-      if (!type.includes("audio")) {
-        const data = (await response.json()) as { message?: string };
-        setSpeechNote({
-          id: message.id,
-          text: data.message ?? "Voice didn\u2019t work. Try again.",
-        });
-        setSpeechState("idle");
-        setSpeechId(null);
-        return;
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      urlRef.current = url;
-      const audio = new Audio(url);
-      audio.autoplay = false;
-      audioRef.current = audio;
-      audio.onended = () => {
-        setSpeechState("idle");
-        setSpeechId(null);
-        if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-        urlRef.current = null;
-      };
-      await audio.play();
-      setSpeechState("playing");
-    } catch {
-      setSpeechNote({ id: message.id, text: "Voice didn\u2019t work. Try again." });
-      setSpeechState("idle");
-      setSpeechId(null);
-    }
+  function handleSave(message: ChatMessage) {
+    if (locked) return;
+    onSave(message);
+    setSaveCueId(message.id);
+    if (saveCueTimerRef.current) clearTimeout(saveCueTimerRef.current);
+    saveCueTimerRef.current = setTimeout(() => {
+      setSaveCueId((current) => (current === message.id ? null : current));
+    }, 2800);
   }
 
   function submit(text: string) {
     const next = text.trim();
-    if (!next || sending) return;
+    if (locked || chatAtLimit || !next || sending) return;
     setDraft("");
     onSend(next);
   }
 
+  const composerLocked = locked || chatAtLimit;
+
   return (
-    <section className="flex min-h-[72dvh] flex-col rounded-2xl border border-border bg-card lg:h-[calc(100dvh-5.5rem)] lg:min-h-0">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <h2 className="text-lg font-semibold tracking-[-0.02em]">Ask Scout</h2>
-        <p className="text-right text-sm text-muted-foreground" data-testid="voice-status">
-          {speechReady === false
-            ? "Voice uses the same setup key as answers."
-            : speechReady
-              ? "Press Hear this on a reply. It will not play by itself."
-              : "Checking voice…"}
-        </p>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4" data-testid="message-list">
-        {messages.length === 0 ? (
-          <div className="max-w-[62ch]">
-            <p className="text-base leading-relaxed">
-              Ask about your project. Scout helps you find facts, write a note, and plan your pictures.
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Answers stay on this project. Scout will not browse the web or make up a fake answer.
-            </p>
-          </div>
-        ) : null}
-        <div className="flex flex-col gap-4" aria-live="polite">
-          {messages.map((message) => {
-            const note = notices.find((item) => item.afterMessageId === message.id);
-            const speechLabel =
-              speechState === "loading" && speechId === message.id
-                ? "Getting the voice…"
-                : speechState === "playing" && speechId === message.id
-                  ? "Stop"
-                  : "Hear this";
-            return (
-              <div key={message.id} className="flex flex-col gap-2">
-                <div
-                  className={
-                    message.role === "user"
-                      ? "ml-auto max-w-[min(100%,65ch)] rounded-2xl bg-primary px-4 py-3 text-primary-foreground"
-                      : "max-w-[min(100%,65ch)] rounded-2xl bg-muted px-4 py-3"
-                  }
-                  data-testid={message.role === "assistant" ? "assistant-message" : "user-message"}
-                >
-                  <p className="text-sm font-medium">
-                    {message.role === "user" ? "You" : "Scout"}
-                  </p>
-                  <p className="mt-1 whitespace-pre-wrap text-base leading-relaxed">
-                    {message.content}
-                  </p>
-                  {message.role === "assistant" ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-11 bg-card px-3 text-base"
-                        onClick={() => hear(message)}
-                        disabled={speechState === "loading" && speechId !== message.id}
-                        data-testid="speech-button"
-                        aria-label={speechLabel}
-                      >
-                        {speechState === "loading" && speechId === message.id ? (
-                          <Loader2 className="animate-spin" aria-hidden />
-                        ) : speechState === "playing" && speechId === message.id ? (
-                          <Square aria-hidden />
-                        ) : (
-                          <Volume2 aria-hidden />
-                        )}
-                        {speechLabel}
-                      </Button>
-                      {message.source !== "guardrail" ? (
+    <div className="flex flex-col gap-3">
+      <section className="flex h-[min(58dvh,32rem)] min-h-[22rem] flex-col overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="border-b border-border px-4 py-3">
+          <h2 className="text-lg font-semibold tracking-[-0.02em]">Ask Scout</h2>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4" data-testid="message-list">
+          {messages.length === 0 ? (
+            <div className="max-w-[62ch]">
+              <p className="text-base leading-relaxed">
+                Ask about your project. Scout helps you find facts, write a note, and plan your
+                pictures.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Answers stay on this project. Scout will not browse the web or make up a fake answer.
+              </p>
+            </div>
+          ) : null}
+          <div className="flex flex-col gap-4" aria-live="polite">
+            {messages.map((message) => {
+              const note = notices.find((item) => item.afterMessageId === message.id);
+              return (
+                <div key={message.id} className="flex flex-col gap-2">
+                  <div
+                    className={
+                      message.role === "user"
+                        ? "ml-auto max-w-[min(100%,65ch)] rounded-2xl bg-primary px-4 py-3 text-primary-foreground"
+                        : "max-w-[min(100%,65ch)] rounded-2xl bg-muted px-4 py-3"
+                    }
+                    data-testid={message.role === "assistant" ? "assistant-message" : "user-message"}
+                  >
+                    <p className="text-sm font-medium">
+                      {message.role === "user" ? "You" : "Scout"}
+                    </p>
+                    <div className="mt-1">
+                      <KidMarkdown text={message.content} />
+                    </div>
+                    {message.role === "assistant" &&
+                    message.source !== "guardrail" &&
+                    !locked ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
                         <Button
                           type="button"
                           variant="outline"
                           className="h-11 bg-card px-3 text-base"
-                          onClick={() => onSave(message)}
-                          disabled={savedMessageIds.includes(message.id)}
+                          onClick={() => handleSave(message)}
+                          data-testid="save-note"
                         >
-                          {savedMessageIds.includes(message.id) ? "Saved" : "Save this"}
+                          {saveCueId === message.id
+                            ? "Pasted into What I learned"
+                            : savedMessageIds.includes(message.id)
+                              ? "Add again"
+                              : "Save this"}
                         </Button>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  {speechNote?.id === message.id ? (
-                    <p className="mt-2 text-sm text-muted-foreground" data-testid="speech-note">
-                      {speechNote.text}
+                      </div>
+                    ) : null}
+                  </div>
+                  {note ? (
+                    <p
+                      className={
+                        note.kind === "error"
+                          ? "max-w-[65ch] text-sm text-destructive"
+                          : "max-w-[65ch] text-sm text-muted-foreground"
+                      }
+                      data-testid={note.kind === "setup" ? "setup-notice" : "error-notice"}
+                    >
+                      {note.text}
                     </p>
                   ) : null}
                 </div>
-                {note ? (
-                  <p
-                    className={
-                      note.kind === "error"
-                        ? "max-w-[65ch] text-sm text-destructive"
-                        : "max-w-[65ch] text-sm text-muted-foreground"
-                    }
-                    data-testid={note.kind === "setup" ? "setup-notice" : "error-notice"}
-                  >
-                    {note.text}
-                  </p>
-                ) : null}
-              </div>
-            );
-          })}
-          {sending ? (
-            <p className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="chat-loading">
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-              Scout is thinking…
-            </p>
-          ) : null}
-          <div ref={bottomRef} />
-        </div>
-      </div>
-      <div className="border-t border-border px-4 py-3">
-        {project.prompts.length > 0 ? (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {project.prompts.map((prompt) => (
-              <Button
-                key={prompt}
-                type="button"
-                variant="secondary"
-                className="h-auto min-h-11 whitespace-normal px-3 py-2 text-left text-base"
-                onClick={() => submit(prompt)}
-                disabled={sending}
+              );
+            })}
+            {sending ? (
+              <p
+                className="flex items-center gap-2 text-sm text-muted-foreground"
+                data-testid="chat-loading"
               >
-                {prompt}
-              </Button>
-            ))}
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+                Scout is thinking…
+              </p>
+            ) : null}
+            <div ref={bottomRef} />
           </div>
-        ) : null}
-        <form
-          className="flex flex-col gap-2 sm:flex-row sm:items-end"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submit(draft);
-          }}
+        </div>
+      </section>
+
+      {chatSoftWarn && !composerLocked ? (
+        <p
+          className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground"
+          data-testid="chat-soft-warn"
+          role="status"
         >
-          <label className="sr-only" htmlFor="scout-question">
-            Your question
-          </label>
-          <Textarea
-            id="scout-question"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                submit(draft);
-              }
+          You&apos;ve done plenty of research. Now it&apos;s time to finish your report —
+          add facts to What I learned, finish your pictures, then submit.
+        </p>
+      ) : null}
+      {locked ? (
+        <p
+          className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground"
+          data-testid="chat-locked"
+        >
+          This project is submitted, so chat is locked. Start a new project when you are ready.
+        </p>
+      ) : chatAtLimit ? (
+        <p
+          className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground"
+          data-testid="chat-at-limit"
+          role="status"
+        >
+          That&apos;s enough questions for this project. Use What I learned and your pictures to
+          finish, then submit when your explore time is up.
+        </p>
+      ) : (
+        <div
+          className="shrink-0 rounded-2xl border border-border bg-card px-4 py-3"
+          data-testid="chat-composer"
+        >
+          {project.prompts.length > 0 ? (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {project.prompts.map((prompt) => (
+                <Button
+                  key={prompt}
+                  type="button"
+                  variant="secondary"
+                  className="h-auto min-h-11 whitespace-normal px-3 py-2 text-left text-base"
+                  onClick={() => submit(prompt)}
+                  disabled={sending}
+                >
+                  {prompt}
+                </Button>
+              ))}
+            </div>
+          ) : null}
+          <form
+            className="flex flex-col gap-2 sm:flex-row sm:items-end"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submit(draft);
             }}
-            maxLength={1500}
-            placeholder="Ask a question about your project"
-            className="min-h-12 flex-1 text-base md:text-base"
-            data-testid="chat-input"
-          />
-          <Button
-            type="submit"
-            className="h-11 px-4 text-base"
-            disabled={sending || draft.trim().length === 0}
-            data-testid="chat-send"
           >
-            {sending ? "Sending…" : "Send"}
-          </Button>
-        </form>
-      </div>
-    </section>
+            <label className="sr-only" htmlFor="scout-question">
+              Your question
+            </label>
+            <Textarea
+              id="scout-question"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  submit(draft);
+                }
+              }}
+              maxLength={1500}
+              placeholder="Ask a question about your project"
+              className="min-h-12 flex-1 text-base md:text-base"
+              data-testid="chat-input"
+            />
+            <Button
+              type="submit"
+              className="h-11 px-4 text-base"
+              disabled={sending || draft.trim().length === 0}
+              data-testid="chat-send"
+            >
+              {sending ? "Sending…" : "Send"}
+            </Button>
+          </form>
+        </div>
+      )}
+    </div>
   );
 }

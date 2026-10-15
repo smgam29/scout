@@ -22,6 +22,7 @@ export async function POST(request: Request) {
   }
   const description = record.description.trim();
   const projectTitle = record.projectTitle.trim();
+  const style = record.style === "photo" ? "photo" : "cartoon";
   if (!description || description.length > 300 || !projectTitle || projectTitle.length > 80) {
     return Response.json(
       {
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
 
   if (!allowRequest(request, "image", 8)) return rateLimited();
 
-  const prepared = prepareImagePrompt(description, projectTitle);
+  const prepared = prepareImagePrompt(description, projectTitle, style);
   if (!prepared.ok) {
     return Response.json({ ok: false, error: "blocked", message: prepared.message });
   }

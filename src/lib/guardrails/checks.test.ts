@@ -104,10 +104,8 @@ describe("blocks unsafe requests", () => {
     }
   });
 
-  it("does not speak or illustrate a blocked request", () => {
-    const speech = checkText("tell me a horror story", "speech");
+  it("does not illustrate a blocked request", () => {
     const image = prepareImagePrompt("a bloody gun fight", "Sea animals");
-    assert.equal(speech.allowed, false);
     assert.equal(image.ok, false);
     if (!image.ok) assert.match(image.message, /picture/);
   });
@@ -124,5 +122,15 @@ describe("image prompts", () => {
       assert.equal(checkText(result.prompt, "image").allowed, true);
     }
     assert.match(childSafeImagePrompt("dolphins", "Sea animals"), /No letters/);
+  });
+
+  it("can ask for a child-safe photograph instead", () => {
+    const result = prepareImagePrompt("A sea turtle coming up for air", "Sea animals", "photo");
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.match(result.prompt, /realistic photograph/i);
+      assert.match(result.prompt, /sea turtle/i);
+      assert.equal(checkText(result.prompt, "image").allowed, true);
+    }
   });
 });

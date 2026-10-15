@@ -2,10 +2,16 @@ import "server-only";
 
 import { checkText } from "@/lib/guardrails/checks";
 
+export type ClientBrief = {
+  label: string;
+  kind: string;
+};
+
 export type ClientProject = {
   title: string;
   task: string;
   imageCount: number;
+  briefs: ClientBrief[];
 };
 
 export type ClientMessage = {
@@ -37,13 +43,26 @@ export function readProject(value: unknown): ClientProject | "blocked" | null {
   if (!checkText(title, "project").allowed || !checkText(task, "project").allowed) {
     return "blocked";
   }
-  return { title, task, imageCount: 3 };
+  const briefs: ClientBrief[] = [];
+  if (Array.isArray(record.briefs)) {
+    for (const item of record.briefs.slice(0, 8)) {
+      if (!item || typeof item !== "object") continue;
+      const brief = item as Record<string, unknown>;
+      if (typeof brief.label !== "string" || typeof brief.kind !== "string") continue;
+      const label = brief.label.trim().slice(0, 160);
+      const kind = brief.kind.trim().slice(0, 20);
+      if (!label || !kind) continue;
+      if (!checkText(label, "project").allowed) return "blocked";
+      briefs.push({ label, kind });
+    }
+  }
+  return { title, task, imageCount: 2, briefs };
 }
 
 export function readConversation(
   value: unknown,
 ): ClientMessage[] | "tamper" | null {
-  if (!Array.isArray(value) || value.length === 0 || value.length > 40) return null;
+  if (!Array.isArray(value) || value.length === 0 || value.length > 50) return null;
   const messages: ClientMessage[] = [];
   for (const item of value) {
     if (!item || typeof item !== "object") return null;
@@ -68,9 +87,6 @@ export const MISSING_CHAT_MESSAGE =
 
 export const MISSING_IMAGE_MESSAGE =
   "Pictures need a setup key from a parent (OpenRouter). This box stays empty until then.";
-
-export const MISSING_SPEECH_MESSAGE =
-  "Voice needs the same setup key as answers (OpenRouter).";
 
 export const PROVIDER_MESSAGE =
   "Scout couldn\u2019t finish that just now. Try again in a moment.";

@@ -8,6 +8,5 @@ export async function GET() {
   return Response.json({
     chat: ready,
     images: ready,
-    speech: ready,
   });
 }

@@ -147,10 +147,42 @@
   }
 }
 
+.notes-highlight {
+  animation: notes-pulse 1.4s ease-out;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 45%, transparent);
+}
+
+.learned-editor-field:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.learned-editor-field p {
+  margin: 0 0 0.75rem;
+}
+
+.learned-editor-field p:last-child {
+  margin-bottom: 0;
+}
+
+@keyframes notes-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--ring) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 0%, transparent);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+  }
+  .notes-highlight {
+    animation: none;
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring) 40%, transparent);
   }
 }

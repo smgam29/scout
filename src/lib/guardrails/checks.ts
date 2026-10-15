@@ -1,6 +1,6 @@
 import "server-only";
 
-export type Channel = "chat" | "image" | "speech" | "project";
+export type Channel = "chat" | "image" | "project";
 
 export type SafetyVerdict =
   | { allowed: true }
@@ -14,9 +14,6 @@ const UPSET_REDIRECT =
 
 const IMAGE_REDIRECT =
   "I can\u2019t make that picture. Let\u2019s show something you learned for your project.";
-
-const SPEECH_REDIRECT =
-  "I can\u2019t say that out loud. Let\u2019s get back to your project.";
 
 const JAILBREAK =
   /ignore\s+(all\s+|any\s+)?(the\s+|your\s+)?(previous\s+|prior\s+|above\s+)?(instructions|rules|prompt|safety)|disregard\s+(your|the|all|these)\s+(rules|instructions|prompt|safety)|forget\s+(your|the|all|these)\s+(rules|instructions|prompt)|override\s+(your|the|these)\s+(rules|instructions|safety)|jailbreak|do\s+anything\s+now|developer\s+mode|reveal\s+(your\s+)?(system\s+)?prompt|show\s+(me\s+)?(your\s+)?(system\s+)?(prompt|instructions)|what\s+are\s+your\s+(hidden\s+)?(instructions|rules|system\s+prompt)|you\s+have\s+no\s+(rules|restrictions|limits)|pretend\s+(you\s+have\s+no\s+rules|there\s+are\s+no\s+rules)|bypass\s+(your|the|these)\s+(rules|safety|filters)|new\s+(system\s+)?(instructions|rules)\s*:|^\s*(system|developer)\s*:/i;
@@ -373,7 +370,6 @@ function blockedCategory(plain: string, coded: string): string | null {
 function redirectFor(category: string, channel: Channel): string {
   if (category === "upset") return UPSET_REDIRECT;
   if (channel === "image") return IMAGE_REDIRECT;
-  if (channel === "speech") return SPEECH_REDIRECT;
   return PROJECT_REDIRECT;
 }
 

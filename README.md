@@ -2,9 +2,9 @@
 
 Scout is a research helper for a 9-year-old. He gets one school-style project, talks with Scout to learn about it, saves short notes, and makes the pictures the project asks for.
 
-The starter project is: “Research sea animals and create 3 images that show what you learned.”
+The starter project is: “Research sea animals and create 2 pictures that show what you learned.”
 
-Scout is not a general chatbot. The safety rules live in server code. The browser cannot edit or remove them. Chat, pictures, and the hear button all go through OpenRouter. The key stays on the server.
+Scout is not a general chatbot. The safety rules live in server code. The browser cannot edit or remove them. Chat and pictures go through OpenRouter. The key stays on the server.
 
 ## Run it on your Mac
 
@@ -39,7 +39,7 @@ Put these in `.env.local`. Do not commit that file. Do not prefix them with `NEX
 
 | Name | Needed for |
 | --- | --- |
-| `OPENROUTER_API_KEY` | Chat, new project ideas, pictures, and Hear this |
+| `OPENROUTER_API_KEY` | Chat, new project ideas, and pictures |
 
 Optional model overrides are listed in `.env.example`.
 
@@ -53,7 +53,7 @@ The conversation, notes, and pictures are saved in this browser’s localStorage
 
 ## Safety checks
 
-Server routes check chat, picture ideas, and speech text before any provider is called. Unsafe requests get a short, kind redirect. Picture ideas are rewritten into a child-safe illustration style. There is no web browsing tool, no code execution, and no file upload.
+Server routes check chat and picture ideas before any provider is called. Unsafe requests get a short, kind redirect. Picture ideas are rewritten into a child-safe illustration style. There is no web browsing tool, no code execution, and no file upload.
 
 ```bash
 npm run test:guardrails
